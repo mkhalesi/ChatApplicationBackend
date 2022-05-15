@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="11.0.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.57.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChatApp.DataAccess\ChatApp.DataAccess.csproj" />
+    <ProjectReference Include="..\ChatApp.Dtos\ChatApp.Dtos.csproj" />
+    <ProjectReference Include="..\ChatApp.Entities\ChatApp.Entities.csproj" />
+    <ProjectReference Include="..\ChatApp.Utilities\ChatApp.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>
