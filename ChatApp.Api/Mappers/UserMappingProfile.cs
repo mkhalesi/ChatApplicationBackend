@@ -12,6 +12,7 @@ namespace ChatApp.Api.Mappers
             mappingProfile.CreateMap<InsertUserDto, UserDto>();
             mappingProfile.CreateMap<RegisterDto, UserDto>();
             mappingProfile.CreateMap<User, UserResponseDto>();
+            mappingProfile.CreateMap<User, RegisterDto>().ReverseMap();
         }
     }
 }

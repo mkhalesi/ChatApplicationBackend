@@ -1,5 +1,9 @@
-﻿using ChatApp.DataAccess.Context;
+﻿using System.Runtime.Serialization;
+using ChatApp.DataAccess.Context;
 using ChatApp.Entities.Common;
+using ChatApp.Utilities.Constants;
+using ChatApp.Utilities.Extensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatApp.DataAccess.Repository
@@ -9,10 +13,13 @@ namespace ChatApp.DataAccess.Repository
     {
         private readonly ChatAppDbContext _context;
         private readonly DbSet<TEntity> _dbSet;
-
-        public Repository(ChatAppDbContext context)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private string CurrentUserId => _httpContextAccessor.HttpContext?.UserId()
+                                        ?? GlobalConstants.DefaultUser;
+        public Repository(ChatAppDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
             this._dbSet = _context.Set<TEntity>();
         }
 
@@ -25,6 +32,8 @@ namespace ChatApp.DataAccess.Repository
         {
             entity.CreatedAt = DateTime.Now;
             entity.UpdatedAt = DateTime.Now;
+            entity.CreatedBy = CurrentUserId;
+            entity.UpdatedBy = CurrentUserId;
             await _dbSet.AddAsync(entity);
         }
 
@@ -32,6 +41,10 @@ namespace ChatApp.DataAccess.Repository
         {
             foreach (var entity in entities)
             {
+                entity.CreatedAt = DateTime.Now;
+                entity.UpdatedAt = DateTime.Now;
+                entity.CreatedBy = CurrentUserId;
+                entity.UpdatedBy = CurrentUserId;
                 await AddEntity(entity);
             }
         }
@@ -44,6 +57,7 @@ namespace ChatApp.DataAccess.Repository
         public void EditEntity(TEntity entity)
         {
             entity.UpdatedAt = DateTime.Now;
+            entity.UpdatedBy = CurrentUserId;
             _dbSet.Update(entity);
         }
 

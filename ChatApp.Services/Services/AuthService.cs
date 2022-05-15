@@ -48,6 +48,10 @@ namespace ChatApp.Services.Services
                 .FirstOrDefaultAsync(p => p.Email.ToLower().Trim() == loginRequestDto.Email.ToLower().Trim() &&
                                           p.Password == loginRequestDto.Password.HashMd5());
 
+            if (userFromDb == null)
+                return new BaseResponseDto<LoginResponseDto>()
+                    .GenerateFailedResponse(ErrorCodes.NotFound, "user not found");
+
             return new BaseResponseDto<LoginResponseDto>().GenerateSuccessResponse(new LoginResponseDto()
             {
                 User = _mapper.Map<UserResponseDto>(userFromDb),
@@ -76,19 +80,21 @@ namespace ChatApp.Services.Services
             user.LastName = user.LastName.Trim();
             user.Email = user.Email.Trim();
             user.Password = user.Password.HashMd5();
+            user.GooglePassword = user.Password.HashMd5();
             user.ConfirmationToken = Guid.NewGuid().ToString().HashMd5();
 
             await userRepository.AddEntity(user);
             await userRepository.SaveChanges();
 
             var userRoleRepository = _unitOfWork.GetRepository<UserRole>();
-            var roleFromDb = await userRoleRepository.GetQuery().FirstOrDefaultAsync(p => p.Role.Name == UserRoleName.UserRole);
+            var roleRepository = _unitOfWork.GetRepository<Role>();
+            var roleFromDb = await roleRepository.GetQuery().FirstOrDefaultAsync(p => p.Name == UserRoleName.UserRole);
             if (roleFromDb != null)
             {
                 var newUserRole = new UserRole()
                 {
                     UserId = user.Id,
-                    RoleId = roleFromDb.RoleId
+                    RoleId = roleFromDb.Id
                 };
 
                 await userRoleRepository.AddEntity(newUserRole);
