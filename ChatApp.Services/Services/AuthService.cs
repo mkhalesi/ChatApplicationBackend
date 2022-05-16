@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using System.Xml.Xsl;
 using AutoMapper;
 using ChatApp.DataAccess.UoW;
 using ChatApp.Dtos.Common;
@@ -51,6 +52,10 @@ namespace ChatApp.Services.Services
             if (userFromDb == null)
                 return new BaseResponseDto<LoginResponseDto>()
                     .GenerateFailedResponse(ErrorCodes.NotFound, "user not found");
+
+            if (!userFromDb.IsConfirmed)
+                return new BaseResponseDto<LoginResponseDto>()
+                    .GenerateFailedResponse(ErrorCodes.NotFound, "user not Activated");
 
             return new BaseResponseDto<LoginResponseDto>().GenerateSuccessResponse(new LoginResponseDto()
             {
@@ -105,6 +110,24 @@ namespace ChatApp.Services.Services
             {
                 Email = registerDto.Email,
                 Password = registerDto.Password
+            });
+        }
+
+        public async Task<BaseResponseDto<UserDto>> GetUserForAuthorization(long userId)
+        {
+            var userRepository = _unitOfWork.GetRepository<User>();
+
+            var userFromDb = await userRepository.GetQuery().FirstOrDefaultAsync(p => p.Id == userId);
+            if (userFromDb == null)
+                return new BaseResponseDto<UserDto>()
+                    .GenerateFailedResponse(ErrorCodes.NotFound, "user not found");
+
+            return new BaseResponseDto<UserDto>().GenerateSuccessResponse(new UserDto()
+            {
+                FirstName = userFromDb.FirstName,
+                LastName = userFromDb.LastName,
+                Email = userFromDb.Email,
+                Id = userFromDb.Id,
             });
         }
 

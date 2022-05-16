@@ -1,13 +1,16 @@
-﻿using ChatApp.Dtos.Common;
+﻿using System.Diagnostics;
+using ChatApp.Api.Filters;
+using ChatApp.Dtos.Common;
 using ChatApp.Dtos.Models.Auths;
+using ChatApp.Dtos.Models.Users;
 using ChatApp.Services.IServices;
+using ChatApp.Utilities.Constants;
 using ChatApp.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatApp.Api.Controllers
 {
-    [AllowAnonymous]
     [Route("api/auth")]
     public class AuthController : BaseApiController
     {
@@ -22,6 +25,7 @@ namespace ChatApp.Api.Controllers
             _authService = authService;
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("login")]
         public async Task<BaseResponseDto<LoginResponseDto>> Login(LoginRequestDto loginRequestDto)
@@ -38,6 +42,21 @@ namespace ChatApp.Api.Controllers
             }
         }
 
+        [ServiceFilter(typeof(AuthFilter))]
+        [HttpPost("check-auth")]
+        public async Task<BaseResponseDto<UserDto>> CheckUserAuth()
+        {
+            var userId = HttpContext.UserId();
+            var result = await _authService.GetUserForAuthorization(int.Parse(userId));
+
+            if (!result.Success)
+                return new BaseResponseDto<UserDto>().GenerateFailedResponse(ErrorCodes.NotFound);
+
+            return result;
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
         [HttpPost]
         [Route("register")]
         public async Task<BaseResponseDto<LoginResponseDto>> Register(RegisterDto registerDto)
@@ -54,6 +73,7 @@ namespace ChatApp.Api.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("google-login")]
         public async Task<BaseResponseDto<LoginResponseDto>> GoogleLogin(GoogleLoginRequestDto loginRequestDto)
@@ -70,6 +90,7 @@ namespace ChatApp.Api.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("forgot-password/{email}")]
         public async Task<BaseResponseDto<bool>> ForgotPassword(string email)

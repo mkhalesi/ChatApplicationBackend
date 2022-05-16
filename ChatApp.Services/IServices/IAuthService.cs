@@ -11,6 +11,8 @@ namespace ChatApp.Services.IServices
 
         Task<BaseResponseDto<LoginResponseDto>> Register(RegisterDto registerDto);
 
+        Task<BaseResponseDto<UserDto>> GetUserForAuthorization(long userId);
+
         Task<BaseResponseDto<LoginResponseDto>> GoogleLogin(GoogleLoginRequestDto loginRequestDto);
 
         Task<BaseResponseDto<bool>> ForgotPassword(string email);

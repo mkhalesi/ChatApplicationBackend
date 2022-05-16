@@ -1,4 +1,5 @@
-﻿using ChatApp.Dtos.Common;
+﻿using ChatApp.Api.Filters;
+using ChatApp.Dtos.Common;
 using ChatApp.Entities.Models.Chat;
 using ChatApp.Services.IServices;
 using ChatApp.Utilities.Extensions;
@@ -15,13 +16,14 @@ namespace ChatApp.Api.Controllers
             _chatService = chatService;
         }
 
+        [ServiceFilter(typeof(AuthFilter))]
         [HttpGet]
         [Route("HistoryMessages/{chatId}")]
         public async Task<BaseResponseDto<List<ChatMessage>>> GetHistoryMessages(long chatId)
         {
             var userId = ControllerContext.HttpContext.UserId();
 
-            if (User.Identity != null && (!User.Identity.IsAuthenticated || string.IsNullOrEmpty(userId)))
+            if (string.IsNullOrEmpty(userId))
                 return new BaseResponseDto<List<ChatMessage>>()
                     .GenerateFailedResponse("Error", "not Authorized");
 
