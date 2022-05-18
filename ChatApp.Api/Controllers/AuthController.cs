@@ -59,7 +59,7 @@ namespace ChatApp.Api.Controllers
         [HttpPost]
         [HttpPost]
         [Route("register")]
-        public async Task<BaseResponseDto<LoginResponseDto>> Register(RegisterDto registerDto)
+        public async Task<BaseResponseDto<RegisterDto>> Register(RegisterDto registerDto)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace ChatApp.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"Register error: {ex}");
-                return new BaseResponseDto<LoginResponseDto>()
+                return new BaseResponseDto<RegisterDto>()
                     .GenerateGeneralFailedResponse(ex.ToString());
             }
         }

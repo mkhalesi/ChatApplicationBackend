@@ -9,7 +9,7 @@ namespace ChatApp.Services.IServices
     {
         Task<BaseResponseDto<LoginResponseDto>> Login(LoginRequestDto loginRequestDto);
 
-        Task<BaseResponseDto<LoginResponseDto>> Register(RegisterDto registerDto);
+        Task<BaseResponseDto<RegisterDto>> Register(RegisterDto registerDto);
 
         Task<BaseResponseDto<UserDto>> GetUserForAuthorization(long userId);
 
@@ -20,3 +20,4 @@ namespace ChatApp.Services.IServices
         Task<(JwtSecurityToken token, UserDto user)> VerifyAuthToken(string token);
     }
 }
+    

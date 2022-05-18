@@ -1,6 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using System.Xml.Xsl;
 using AutoMapper;
 using ChatApp.DataAccess.UoW;
 using ChatApp.Dtos.Common;
@@ -64,20 +63,20 @@ namespace ChatApp.Services.Services
             });
         }
 
-        public async Task<BaseResponseDto<LoginResponseDto>> Register(RegisterDto registerDto)
+        public async Task<BaseResponseDto<RegisterDto>> Register(RegisterDto registerDto)
         {
             if (registerDto == null ||
                 string.IsNullOrEmpty(registerDto.Email) ||
                 string.IsNullOrEmpty(registerDto.Password))
             {
-                return new BaseResponseDto<LoginResponseDto>().GenerateFailedResponse(ErrorCodes.BadRequest);
+                return new BaseResponseDto<RegisterDto>().GenerateFailedResponse(ErrorCodes.BadRequest);
             }
 
             var userRepository = _unitOfWork.GetRepository<User>();
             var userEmailExist = await userRepository.GetQuery()
                 .AnyAsync(p => p.Email.ToLower().Trim() == registerDto.Email.ToLower().TrimEnd());
             if (userEmailExist)
-                return new BaseResponseDto<LoginResponseDto>().GenerateFailedResponse(ErrorCodes.EmailExists);
+                return new BaseResponseDto<RegisterDto>().GenerateFailedResponse(ErrorCodes.EmailExists);
 
             var user = _mapper.Map<User>(registerDto);
 
@@ -106,19 +105,14 @@ namespace ChatApp.Services.Services
                 await userRoleRepository.SaveChanges();
             }
 
-            return await Login(new LoginRequestDto
-            {
-                Email = registerDto.Email,
-                Password = registerDto.Password
-            });
+            return new BaseResponseDto<RegisterDto>().GenerateSuccessResponse(null);
         }
 
         public async Task<BaseResponseDto<UserDto>> GetUserForAuthorization(long userId)
         {
             var userRepository = _unitOfWork.GetRepository<User>();
 
-            var userFromDb = await userRepository.GetQuery().FirstOrDefaultAsync(p => p.Id == userId);
-            if (userFromDb == null)
+            var userFromDb = await userRepository.GetQuery().FirstOrDefaultAsync(p => p.Id == userId); if (userFromDb == null)
                 return new BaseResponseDto<UserDto>()
                     .GenerateFailedResponse(ErrorCodes.NotFound, "user not found");
 
