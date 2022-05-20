@@ -21,6 +21,10 @@ namespace ChatApp.Api.Hubs
         }
         public async Task SendMessage(PrivateChatMessageDto privateChatMessage)
         {
+            privateChatMessage.ReceiverId = 6;
+            privateChatMessage.ChatId = 1;
+            /*privateChatMessage.Content = "test";*/
+
             var chatMessageRepository = _unitOfWork.GetRepository<ChatMessage>();
             await chatMessageRepository.AddEntity(new ChatMessage()
             {
@@ -28,7 +32,8 @@ namespace ChatApp.Api.Hubs
                 ReceiverId = privateChatMessage.ReceiverId,
                 MessageType = MessageType.Message,
                 ReceiverType = ReceiverType.Private,
-                Message = privateChatMessage.Content,
+                Message = privateChatMessage.Message,
+                ChatId = 1,
             });
             await chatMessageRepository.SaveChanges();
 

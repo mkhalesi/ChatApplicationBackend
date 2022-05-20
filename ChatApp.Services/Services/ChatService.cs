@@ -1,4 +1,5 @@
 ﻿using ChatApp.DataAccess.UoW;
+using ChatApp.Dtos.Models.Chats;
 using ChatApp.Entities.Enums;
 using ChatApp.Entities.Models.Chat;
 using ChatApp.Services.IServices;
@@ -13,7 +14,7 @@ namespace ChatApp.Services.Services
         {
             _unitOfWork = unitOfWork;
         }
-        public Task<List<ChatMessage>> GetHistoryMessage(long chatId, long userId)
+        public Task<List<PrivateChatMessageDto>> GetHistoryMessage(long chatId, long userId)
         {
             var chatMessageRepository = _unitOfWork.GetRepository<ChatMessage>();
 
@@ -24,6 +25,17 @@ namespace ChatApp.Services.Services
                             p.ChatId == chatId &&
                             p.MessageType == MessageType.Message &&
                             p.ReceiverType == ReceiverType.Private)
+                .Select(p => new PrivateChatMessageDto()
+                {
+                    ChatId = p.ChatId,
+                    CreatedAt = p.CreatedAt,
+                    ReceiverId = p.ReceiverId,
+                    SenderId = p.SenderId,
+                    Message = p.Message,
+                    ChatMessageId = p.Id,
+                    UpdatedAt = p.UpdatedAt,
+                    ActiveUserHasSender = userId == p.SenderId
+                })
                 .ToListAsync();
         }
     }
