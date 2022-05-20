@@ -3,5 +3,6 @@
     public class HubMethods
     {
         public const string ReceiveMessage = "ReceiveMessage";
+        public const string HistoryMessages = "HistoryMessages";
     }
 }
