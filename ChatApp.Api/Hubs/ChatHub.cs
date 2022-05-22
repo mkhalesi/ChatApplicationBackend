@@ -19,25 +19,35 @@ namespace ChatApp.Api.Hubs
             _userService = userService;
             _unitOfWork = unitOfWork;
         }
-        public async Task SendMessage(PrivateChatMessageDto privateChatMessage)
+        public async Task SendMessage(SendMessageDTO message)
         {
-            privateChatMessage.ReceiverId = 6;
-            privateChatMessage.ChatId = 1;
-            /*privateChatMessage.Content = "test";*/
+            message.ReceiverId = 6;
+            message.ChatId = 1;
 
             var chatMessageRepository = _unitOfWork.GetRepository<ChatMessage>();
-            await chatMessageRepository.AddEntity(new ChatMessage()
+            var newMessage = new ChatMessage()
             {
                 SenderId = int.Parse(Context.GetHttpContext()?.UserId()),
-                ReceiverId = privateChatMessage.ReceiverId,
+                ReceiverId = message.ReceiverId,
                 MessageType = MessageType.Message,
                 ReceiverType = ReceiverType.Private,
-                Message = privateChatMessage.Message,
+                Message = message.Message,
                 ChatId = 1,
-            });
+            };
+            await chatMessageRepository.AddEntity(newMessage);
             await chatMessageRepository.SaveChanges();
 
-            await Clients.All.SendAsync(HubMethods.ReceiveMessage, privateChatMessage);
+            var messageObject = new PrivateChatMessageDto()
+            {
+                SenderId = newMessage.SenderId,
+                ChatId = newMessage.ChatId,
+                Message = newMessage.Message,
+                ReceiverId = newMessage.ReceiverId,
+                ChatMessageId = newMessage.Id,
+                CreatedAt = newMessage.CreatedAt.ToString("t")
+            };
+
+            await Clients.All.SendAsync(HubMethods.ReceiveMessage, messageObject);
         }
     }
 }
