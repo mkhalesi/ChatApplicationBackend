@@ -7,7 +7,7 @@ namespace ChatApp.Services.IServices
     public interface IChatService
     {
         Task<List<ChatDTO>> GetAllUserChats(long userId);
-        Task<ChatDTO> GetUserChatByChatId(long userId , long chatId);
+        Task<ChatDTO> GetUserChatByChatId(long userId, long chatId);
         Task<List<PrivateChatMessageDto>> GetHistoryMessage(long chatId, long userId);
     }
 }

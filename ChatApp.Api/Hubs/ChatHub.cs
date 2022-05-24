@@ -2,10 +2,12 @@
 using ChatApp.Dtos.Models.Chats;
 using ChatApp.Entities.Enums;
 using ChatApp.Entities.Models.Chat;
+using ChatApp.Entities.Models.User;
 using ChatApp.Services.IServices;
 using ChatApp.Utilities.Constants;
 using ChatApp.Utilities.Extensions;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChatApp.Api.Hubs
 {
@@ -21,18 +23,38 @@ namespace ChatApp.Api.Hubs
         }
         public async Task SendMessage(SendMessageDTO message)
         {
-            message.ReceiverId = 6;
-            message.ChatId = 1;
+            var userId = int.Parse(Context.GetHttpContext()?.UserId() ??
+                                   throw new InvalidOperationException("User Not Found"));
 
+            var userRepository = _unitOfWork.GetRepository<User>();
+            var chatRepository = _unitOfWork.GetRepository<Chat>();
             var chatMessageRepository = _unitOfWork.GetRepository<ChatMessage>();
+
+            if (!await userRepository.GetQuery().AnyAsync(p => p.Id == message.ReceiverId && p.Id != userId && !p.IsDeleted))
+                throw new HubException("ReceiverId Not Found");
+            if (string.IsNullOrWhiteSpace(message.Message))
+                throw new HubException("Message cannot be Null");
+
+            var chatExist = await chatRepository.GetEntityById(message.ChatId);
+            if (chatExist == null)
+            {
+                var newUserChat = new Chat()
+                {
+                    User1 = userId,
+                    User2 = message.ReceiverId,
+                };
+                await chatRepository.AddEntity(newUserChat);
+                await chatRepository.SaveChanges();
+            }
+
             var newMessage = new ChatMessage()
             {
-                SenderId = int.Parse(Context.GetHttpContext()?.UserId()),
+                SenderId = userId,
                 ReceiverId = message.ReceiverId,
                 MessageType = MessageType.Message,
                 ReceiverType = ReceiverType.Private,
                 Message = message.Message,
-                ChatId = 1,
+                ChatId = message.ChatId,
             };
             await chatMessageRepository.AddEntity(newMessage);
             await chatMessageRepository.SaveChanges();
