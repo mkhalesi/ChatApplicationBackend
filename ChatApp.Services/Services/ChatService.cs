@@ -20,9 +20,10 @@ namespace ChatApp.Services.Services
         public async Task<List<ChatDTO>> GetAllUserChats(long userId)
         {
             var chatRepository = _unitOfWork.GetRepository<Chat>();
-            var findReceiverInUserChats = await GetUserReceiversFromCurrentUserChats(userId);
+            var findReceiverInUserChats = GetUserReceiversFromCurrentUserChats(userId);
 
             var res = await chatRepository.GetQuery()
+                .AsQueryable()
                 .Include(p => p.Users)
                 .Include(p => p.ChatMessages)
                 .Where(p => p.User1 == userId || p.User2 == userId && !p.IsDeleted && p.ChatMessages.Any())
@@ -33,8 +34,10 @@ namespace ChatApp.Services.Services
                     ReceiverId = p.User1 == userId ? p.User2 : p.User1,
                     StartedChatDate = p.CreatedAt.ToString("M"),
                     LastUpdatedChatDate = p.UpdatedAt.Value.ToString("M"),
-                    /*ReceiverFirstName = findReceiverInUserChats.FirstOrDefault(s => s.Id == userId).FirstName,
-                    ReceiverLastName = findReceiverInUserChats.FirstOrDefault(s => s.Id == userId).LastName,*/
+                    ReceiverFirstName = findReceiverInUserChats.Any(s => s.ChatId == p.Id) ?
+                        findReceiverInUserChats.Single(s => s.ChatId == p.Id).FirstName : "",
+                    ReceiverLastName = findReceiverInUserChats.Any(s => s.ChatId == p.Id) ?
+                        findReceiverInUserChats.Single(s => s.ChatId == p.Id).LastName : "",
                     LatestMessageText = p.ChatMessages.Any() ?
                         p.ChatMessages.OrderByDescending(s => s.CreatedAt).First().Message : "",
                 })
@@ -46,7 +49,7 @@ namespace ChatApp.Services.Services
         public async Task<ChatDTO> GetUserChatByChatId(long userId, long chatId)
         {
             var chatRepository = _unitOfWork.GetRepository<Chat>();
-            var findReceiverInUserChats = await GetUserReceiversFromCurrentUserChats(userId);
+            var findReceiverInUserChats =  GetUserReceiversFromCurrentUserChats(userId);
 
             return await chatRepository.GetQuery()
                 .Where(p => (p.User1 == userId || p.User2 == userId)
@@ -58,14 +61,10 @@ namespace ChatApp.Services.Services
                     ReceiverId = p.User1 == userId ? p.User2 : p.User1,
                     StartedChatDate = p.CreatedAt.ToString("M"),
                     LastUpdatedChatDate = p.CreatedAt.ToString("M"),
-                    /*ReceiverFirstName = p.User1 == userId ?
-                            findReceiverInUserChats.First(s => s.Id == p.User2).FirstName :
-                            p.User2 == userId ?
-                                findReceiverInUserChats.First(s => s.Id == p.User1).FirstName : "",
-                    ReceiverLastName = p.User1 == userId ?
-                        findReceiverInUserChats.First(s => s.Id == p.User2).LastName :
-                        p.User2 == userId ?
-                            findReceiverInUserChats.First(s => s.Id == p.User1).LastName : "",*/
+                    ReceiverFirstName = findReceiverInUserChats.Any(s => s.ChatId == p.Id) ?
+                        findReceiverInUserChats.Single(s => s.ChatId == p.Id).FirstName : "",
+                    ReceiverLastName = findReceiverInUserChats.Any(s => s.ChatId == p.Id) ?
+                        findReceiverInUserChats.Single(s => s.ChatId == p.Id).LastName : "",
                 }).FirstOrDefaultAsync()
                    ?? throw new InvalidOperationException();
         }
@@ -84,12 +83,12 @@ namespace ChatApp.Services.Services
                 .Select(p => new PrivateChatMessageDto()
                 {
                     ChatId = p.ChatId,
-                    CreatedAt = p.CreatedAt.ToString("M"),
+                    CreatedAt = p.CreatedAt.ToString("t"),
                     ReceiverId = p.ReceiverId,
                     SenderId = p.SenderId,
                     Message = p.Message,
                     ChatMessageId = p.Id,
-                    UpdatedAt = p.UpdatedAt.Value.ToString("M"),
+                    UpdatedAt = p.UpdatedAt.Value.ToString("t"),
                     ActiveUserHasSender = userId == p.SenderId
                 })
                 .ToListAsync();
@@ -101,22 +100,29 @@ namespace ChatApp.Services.Services
 
         #region helpers
 
-        private async Task<List<UserDto>> GetUserReceiversFromCurrentUserChats(long userId)
+        private IQueryable<UserDto> GetUserReceiversFromCurrentUserChats(long userId)
         {
             var chatRepository = _unitOfWork.GetRepository<Chat>();
             var userRepository = _unitOfWork.GetRepository<User>();
 
-            var userChats = await chatRepository.GetQuery()
+            var userChats = chatRepository.GetQuery().AsQueryable()
                 .Where(p => p.User1 == userId || p.User2 == userId && !p.IsDeleted)
-                .ToListAsync();
-            return await userRepository.GetQuery()
-                .Where(p => userChats.Select(s => s.User1).Contains(p.Id) || userChats.Select(s => s.User2).Contains(p.Id))
+                .Select(p => new ReceiverChatDTO()
+                {
+                    SenderId = p.User1 == userId ? p.User1 : p.User2,
+                    ReceiverId = p.User1 == userId ? p.User2 : p.User1,
+                    ChatId = p.Id,
+                })
+                .AsQueryable();
+            return userRepository.GetQuery().AsQueryable()
+                .Where(p => userChats.Select(s => s.ReceiverId).Contains(p.Id))
                 .Select(p => new UserDto()
                 {
                     Id = p.Id,
                     FirstName = p.FirstName,
                     LastName = p.LastName,
-                }).ToListAsync();
+                    ChatId = userChats.SingleOrDefault(s => s.ReceiverId == p.Id)!.ChatId,
+                }).AsQueryable();
         }
 
         #endregion
