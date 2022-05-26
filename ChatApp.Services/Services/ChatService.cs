@@ -1,10 +1,12 @@
 ﻿using ChatApp.DataAccess.UoW;
 using ChatApp.Dtos.Models.Chats;
+using ChatApp.Dtos.Models.Paging;
 using ChatApp.Dtos.Models.Users;
 using ChatApp.Entities.Enums;
 using ChatApp.Entities.Models.Chat;
 using ChatApp.Entities.Models.User;
 using ChatApp.Services.IServices;
+using ChatApp.Utilities.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatApp.Services.Services
@@ -49,7 +51,7 @@ namespace ChatApp.Services.Services
         public async Task<ChatDTO> GetUserChatByChatId(long userId, long chatId)
         {
             var chatRepository = _unitOfWork.GetRepository<Chat>();
-            var findReceiverInUserChats =  GetUserReceiversFromCurrentUserChats(userId);
+            var findReceiverInUserChats = GetUserReceiversFromCurrentUserChats(userId);
 
             return await chatRepository.GetQuery()
                 .Where(p => (p.User1 == userId || p.User2 == userId)
@@ -69,17 +71,25 @@ namespace ChatApp.Services.Services
                    ?? throw new InvalidOperationException();
         }
 
-        public async Task<List<PrivateChatMessageDto>> GetHistoryMessage(long chatId, long userId)
+        public async Task<FilterPrivateMessagesDTO> GetHistoryMessage(FilterPrivateMessagesDTO filter)
         {
             var chatMessageRepository = _unitOfWork.GetRepository<ChatMessage>();
-
-            var result = await chatMessageRepository.GetQuery()
+            var chatMessagesQuery = chatMessageRepository.GetQuery()
                 .Where(p =>
-                    (p.SenderId == userId || p.ReceiverId == userId) &&
-                    (p.Chat.User1 == userId || p.Chat.User2 == userId) &&
-                    p.ChatId == chatId &&
+                    (p.SenderId == filter.UserId || p.ReceiverId == filter.UserId) &&
+                    (p.Chat.User1 == filter.UserId || p.Chat.User2 == filter.UserId) &&
+                    p.ChatId == filter.ChatId &&
                     p.MessageType == MessageType.Message &&
                     p.ReceiverType == ReceiverType.Private)
+                .AsQueryable();
+
+            chatMessagesQuery = chatMessagesQuery.OrderByDescending(p => p.CreatedAt).AsQueryable();
+
+            var count = (int)Math.Ceiling(chatMessagesQuery.Count() / (double)filter.TakeEntity);
+            var pager = Pager.Build(count, filter.PageId, filter.TakeEntity);
+
+            var messages = await chatMessagesQuery
+                .Paging(pager)
                 .Select(p => new PrivateChatMessageDto()
                 {
                     ChatId = p.ChatId,
@@ -89,14 +99,13 @@ namespace ChatApp.Services.Services
                     Message = p.Message,
                     ChatMessageId = p.Id,
                     UpdatedAt = p.UpdatedAt.Value.ToString("t"),
-                    ActiveUserHasSender = userId == p.SenderId
-                })
-                .ToListAsync();
+                    ActiveUserHasSender = filter.UserId == p.SenderId,
+                    CreatedDateTime = p.CreatedAt,
+                }).ToListAsync();
 
-            return result.OrderBy(p => p.CreatedAt).ToList();
-
+            var res = filter.SetChatMessages(messages.OrderBy(p => p.CreatedDateTime).ToList()).SetPaging(pager);
+            return res;
         }
-
 
         #region helpers
 

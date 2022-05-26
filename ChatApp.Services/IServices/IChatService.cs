@@ -8,6 +8,6 @@ namespace ChatApp.Services.IServices
     {
         Task<List<ChatDTO>> GetAllUserChats(long userId);
         Task<ChatDTO> GetUserChatByChatId(long userId, long chatId);
-        Task<List<PrivateChatMessageDto>> GetHistoryMessage(long chatId, long userId);
+        Task<FilterPrivateMessagesDTO> GetHistoryMessage(FilterPrivateMessagesDTO filter);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace ChatApp.Dtos.Models.Chats
+﻿using ChatApp.Dtos.Models.Paging;
+
+namespace ChatApp.Dtos.Models.Chats
 {
     public class PrivateChatMessageDto
     {
@@ -10,6 +12,8 @@
         public bool ActiveUserHasSender { get; set; }
         public string UpdatedAt { get; set; }
         public string CreatedAt { get; set; }
+        public DateTime? CreatedDateTime { get; set; }
+
 
     }
 }

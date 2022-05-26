@@ -59,22 +59,24 @@ namespace ChatApp.Api.Controllers
         }
 
         [ServiceFilter(typeof(AuthFilter))]
-        [HttpGet]
-        [Route("HistoryMessages/{chatId}")]
-        public async Task<BaseResponseDto<List<PrivateChatMessageDto>>> GetHistoryMessages(long chatId)
+        [HttpGet("HistoryMessages")]
+        public async Task<BaseResponseDto<FilterPrivateMessagesDTO>> GetHistoryMessages([FromQuery] FilterPrivateMessagesDTO filter)
         {
             var userId = ControllerContext.HttpContext.UserId();
 
             if (string.IsNullOrEmpty(userId))
-                return new BaseResponseDto<List<PrivateChatMessageDto>>()
+                return new BaseResponseDto<FilterPrivateMessagesDTO>()
                     .GenerateFailedResponse("Error", "not Authorized");
 
-            if (chatId == 0)
-                return new BaseResponseDto<List<PrivateChatMessageDto>>()
+            if (filter.ChatId == 0)
+                return new BaseResponseDto<FilterPrivateMessagesDTO>()
                     .GenerateFailedResponse("Error", "chatId is null");
 
-            var result = await _chatService.GetHistoryMessage(chatId, int.Parse(userId));
-            return new BaseResponseDto<List<PrivateChatMessageDto>>()
+            filter.UserId = int.Parse(userId);
+            filter.TakeEntity = filter.TakeEntity != 0 ? filter.TakeEntity : 15;
+
+            var result = await _chatService.GetHistoryMessage(filter);
+            return new BaseResponseDto<FilterPrivateMessagesDTO>()
                 .GenerateSuccessResponse(result);
         }
     }
