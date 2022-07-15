@@ -1,6 +1,4 @@
-﻿
-using ChatApp.Dtos.Models.Chats;
-using ChatApp.Entities.Models.Chat;
+﻿using ChatApp.Dtos.Models.Chats;
 
 namespace ChatApp.Services.IServices
 {

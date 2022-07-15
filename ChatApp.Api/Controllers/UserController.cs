@@ -1,7 +1,6 @@
 ﻿using ChatApp.Dtos.Common;
 using ChatApp.Dtos.Models.Auths;
 using ChatApp.Dtos.Models.Users;
-using ChatApp.Entities.Models.Access;
 using ChatApp.Services.IServices;
 using ChatApp.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;

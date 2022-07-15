@@ -32,7 +32,7 @@ namespace ChatApp.Api.Hubs
         {
             var httpContext = Context.GetHttpContext();
             var userId = httpContext?.UserId();
-            if (userId == null) return null;
+            if (userId == null) return Task.CompletedTask;
 
             var canGet = Connections.TryGetValue(userId, out var connections);
             if (!canGet) return Task.CompletedTask;

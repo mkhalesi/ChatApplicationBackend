@@ -5,5 +5,6 @@
         public long ReceiverId { get; set; }
         public long ChatId { get; set; }
         public string Message { get; set; }
+        public long? ReplyToMessageId { get; set; }
     }
 }

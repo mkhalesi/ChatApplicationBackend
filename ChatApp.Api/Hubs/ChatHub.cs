@@ -55,18 +55,32 @@ namespace ChatApp.Api.Hubs
                 ReceiverType = ReceiverType.Private,
                 Message = message.Message,
                 ChatId = message.ChatId,
+                ReplyToMessageId = message.ReplyToMessageId != 0 ? message.ReplyToMessageId : null,
             };
             await chatMessageRepository.AddEntity(newMessage);
             await chatMessageRepository.SaveChanges();
 
+            var newMessageFormDb = await chatMessageRepository.GetQuery()
+                .Include(p => p.ReplyToMessage)
+                .FirstOrDefaultAsync(p => p.Id == newMessage.Id);
+            if (newMessageFormDb == null) throw new HubException("new message not Found From DB");
+
             var messageObject = new PrivateChatMessageDto()
             {
-                SenderId = newMessage.SenderId,
-                ChatId = newMessage.ChatId,
-                Message = newMessage.Message,
-                ReceiverId = newMessage.ReceiverId,
-                ChatMessageId = newMessage.Id,
-                CreatedAt = newMessage.CreatedAt.ToString("t")
+                SenderId = newMessageFormDb.SenderId,
+                ChatId = newMessageFormDb.ChatId,
+                Message = newMessageFormDb.Message,
+                ReceiverId = newMessageFormDb.ReceiverId,
+                ChatMessageId = newMessageFormDb.Id,
+                CreatedAt = newMessageFormDb.CreatedAt.ToString("t"),
+                ReplyToMessage = newMessageFormDb.ReplyToMessageId.HasValue && newMessageFormDb.ReplyToMessage != null ?
+                    new ReplyToMessageDTO()
+                    {
+                        ReplyToMessageId = newMessageFormDb.ReplyToMessageId.Value,
+                        ReplyToFullName = ChatExtensions.GetUserFullName(
+                            userRepository.GetQuery().FirstOrDefault(s => s.Id == newMessageFormDb.ReplyToMessage.SenderId)),
+                        Message = newMessageFormDb.ReplyToMessage.Message
+                    } : null,
             };
 
             await Clients.All.SendAsync(HubMethods.ReceiveMessage, messageObject);

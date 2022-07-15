@@ -18,19 +18,6 @@ namespace ChatApp.Api.Controllers
             _chatService = chatService;
         }
 
-        /*
-        [ServiceFilter(typeof(AuthFilter))]
-        [HttpGet("GetReceiverMessage")]
-        public async Task<IActionResult> GetReceiverMessage()
-        {
-            await _chatHub.Clients.All.SendAsync(HubMethods.HistoryMessages, GetHistoryMessages(1));
-            return Ok(new
-            {
-                message = "Request Completed",
-            });
-        }
-        */
-
         [ServiceFilter(typeof(AuthFilter))]
         [HttpGet("getAllUserChats")]
         public async Task<BaseResponseDto<List<ChatDTO>>> GetAllUserChats()
@@ -43,7 +30,6 @@ namespace ChatApp.Api.Controllers
             return new BaseResponseDto<List<ChatDTO>>()
                 .GenerateSuccessResponse(res);
         }
-
 
         [ServiceFilter(typeof(AuthFilter))]
         [HttpGet("getUserChatByChatId/{chatId}")]

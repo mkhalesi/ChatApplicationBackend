@@ -1,6 +1,4 @@
-﻿using ChatApp.Dtos.Models.Paging;
-
-namespace ChatApp.Dtos.Models.Chats
+﻿namespace ChatApp.Dtos.Models.Chats
 {
     public class PrivateChatMessageDto
     {
@@ -13,7 +11,6 @@ namespace ChatApp.Dtos.Models.Chats
         public string UpdatedAt { get; set; }
         public string CreatedAt { get; set; }
         public DateTime? CreatedDateTime { get; set; }
-
-
+        public ReplyToMessageDTO? ReplyToMessage { get; set; }
     }
 }

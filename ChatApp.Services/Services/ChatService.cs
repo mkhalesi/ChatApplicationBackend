@@ -18,7 +18,6 @@ namespace ChatApp.Services.Services
         {
             _unitOfWork = unitOfWork;
         }
-
         public async Task<List<ChatDTO>> GetAllUserChats(long userId)
         {
             var chatRepository = _unitOfWork.GetRepository<Chat>();
@@ -67,6 +66,8 @@ namespace ChatApp.Services.Services
                         findReceiverInUserChats.Single(s => s.ChatId == p.Id).FirstName : "",
                     ReceiverLastName = findReceiverInUserChats.Any(s => s.ChatId == p.Id) ?
                         findReceiverInUserChats.Single(s => s.ChatId == p.Id).LastName : "",
+                    LatestMessageText = p.ChatMessages.Any() ?
+                        p.ChatMessages.OrderByDescending(s => s.CreatedAt).First().Message : "",
                 }).FirstOrDefaultAsync()
                    ?? throw new InvalidOperationException();
         }
@@ -74,6 +75,7 @@ namespace ChatApp.Services.Services
         public async Task<FilterPrivateMessagesDTO> GetHistoryMessage(FilterPrivateMessagesDTO filter)
         {
             var chatMessageRepository = _unitOfWork.GetRepository<ChatMessage>();
+            var userRepository = _unitOfWork.GetRepository<User>();
             var chatMessagesQuery = chatMessageRepository.GetQuery()
                 .Where(p =>
                     (p.SenderId == filter.UserId || p.ReceiverId == filter.UserId) &&
@@ -101,9 +103,18 @@ namespace ChatApp.Services.Services
                     UpdatedAt = p.UpdatedAt.Value.ToString("t"),
                     ActiveUserHasSender = filter.UserId == p.SenderId,
                     CreatedDateTime = p.CreatedAt,
+                    ReplyToMessage = p.ReplyToMessageId.HasValue && p.ReplyToMessage != null ?
+                        new ReplyToMessageDTO()
+                        {
+                            ReplyToMessageId = p.ReplyToMessageId.Value,
+                            ReplyToFullName = ChatExtensions.GetUserFullName(
+                                userRepository.GetQuery().FirstOrDefault(s => s.Id == p.ReplyToMessage.SenderId)),
+                            Message = p.ReplyToMessage.Message
+                        } : null,
                 }).ToListAsync();
 
-            var res = filter.SetChatMessages(messages.OrderBy(p => p.CreatedDateTime).ToList()).SetPaging(pager);
+            var res = filter.SetChatMessages(messages.OrderBy(p => p.CreatedDateTime)
+                                            .ToList()).SetPaging(pager);
             return res;
         }
 

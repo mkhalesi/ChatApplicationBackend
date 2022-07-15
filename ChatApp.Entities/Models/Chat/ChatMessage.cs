@@ -1,4 +1,5 @@
-﻿using ChatApp.Entities.Common;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using ChatApp.Entities.Common;
 using ChatApp.Entities.Enums;
 
 namespace ChatApp.Entities.Models.Chat
@@ -15,9 +16,12 @@ namespace ChatApp.Entities.Models.Chat
         public MessageType MessageType { get; set; }
 
         public string Message { get; set; }
+        public long? ReplyToMessageId { get; set; }
 
         #region relations
 
+        [ForeignKey("ReplyToMessageId")]
+        public ChatMessage? ReplyToMessage { get; set; }
         public Chat Chat { get; set; }
 
         #endregion

@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
-using ChatApp.Api.Filters;
+﻿using ChatApp.Api.Filters;
 using ChatApp.Dtos.Common;
 using ChatApp.Dtos.Models.Auths;
 using ChatApp.Dtos.Models.Users;
 using ChatApp.Services.IServices;
 using ChatApp.Utilities.Constants;
 using ChatApp.Utilities.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -57,7 +57,6 @@ namespace ChatApp.Api.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [HttpPost]
         [Route("register")]
         public async Task<BaseResponseDto<RegisterDto>> Register(RegisterDto registerDto)
         {
@@ -105,6 +104,13 @@ namespace ChatApp.Api.Controllers
                 return new BaseResponseDto<bool>()
                     .GenerateGeneralFailedResponse(ex.ToString());
             }
+        }
+
+        [HttpGet("sign-out")]
+        public async Task<BaseResponseDto<bool>> UserSignOut()
+        {
+            await HttpContext.SignOutAsync();
+            return new BaseResponseDto<bool>().GenerateSuccessResponse(true);
         }
 
     }
