@@ -17,6 +17,7 @@ namespace ChatApp.Entities.Models.Chat
 
         public string Message { get; set; }
         public long? ReplyToMessageId { get; set; }
+        public DateTime? ReadTime { get; set; }
 
         #region relations
 

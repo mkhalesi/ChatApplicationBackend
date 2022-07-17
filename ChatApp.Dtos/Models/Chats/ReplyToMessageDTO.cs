@@ -5,5 +5,6 @@
         public long ReplyToMessageId { get; set; }      
         public string? ReplyToFullName { get; set; }
         public string Message { get; set; }
+        public long ReplyToUserId { get; set; }
     }
 }

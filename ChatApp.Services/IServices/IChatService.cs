@@ -7,5 +7,6 @@ namespace ChatApp.Services.IServices
         Task<List<ChatDTO>> GetAllUserChats(long userId);
         Task<ChatDTO> GetUserChatByChatId(long userId, long chatId);
         Task<FilterPrivateMessagesDTO> GetHistoryMessage(FilterPrivateMessagesDTO filter);
+        Task<bool> SeenMessages(long userId, long chatId);
     }
 }

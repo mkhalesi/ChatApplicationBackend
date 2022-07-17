@@ -41,6 +41,7 @@ namespace ChatApp.Services.Services
                         findReceiverInUserChats.Single(s => s.ChatId == p.Id).LastName : "",
                     LatestMessageText = p.ChatMessages.Any() ?
                         p.ChatMessages.OrderByDescending(s => s.CreatedAt).First().Message : "",
+                    UnreadMessagesCount = p.ChatMessages.Count(s => s.ReadTime == null && s.ReceiverId == userId)
                 })
                 .ToListAsync();
 
@@ -109,13 +110,32 @@ namespace ChatApp.Services.Services
                             ReplyToMessageId = p.ReplyToMessageId.Value,
                             ReplyToFullName = ChatExtensions.GetUserFullName(
                                 userRepository.GetQuery().FirstOrDefault(s => s.Id == p.ReplyToMessage.SenderId)),
-                            Message = p.ReplyToMessage.Message
+                            Message = p.ReplyToMessage.Message,
+                            ReplyToUserId = p.ReplyToMessage.SenderId,
                         } : null,
+                    ReadMessage = p.ReadTime.HasValue
                 }).ToListAsync();
 
             var res = filter.SetChatMessages(messages.OrderBy(p => p.CreatedDateTime)
                                             .ToList()).SetPaging(pager);
             return res;
+        }
+
+        public async Task<bool> SeenMessages(long userId, long chatId)
+        {
+            var chatMessageRepo = _unitOfWork.GetRepository<ChatMessage>();
+            var findUnreadMessages = await chatMessageRepo.GetQuery()
+                .Where(p => p.ReadTime == null && p.ChatId == chatId && p.ReceiverId == userId).ToListAsync();
+            if (findUnreadMessages.Any())
+            {
+                foreach (var unMessage in findUnreadMessages)
+                {
+                    unMessage.ReadTime = DateTime.Now;
+                }
+                await chatMessageRepo.SaveChanges();
+                return true;
+            }
+            return false;
         }
 
         #region helpers

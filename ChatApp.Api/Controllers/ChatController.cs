@@ -65,5 +65,19 @@ namespace ChatApp.Api.Controllers
             return new BaseResponseDto<FilterPrivateMessagesDTO>()
                 .GenerateSuccessResponse(result);
         }
+
+        [ServiceFilter(typeof(AuthFilter))]
+        [HttpGet("SeenMessages/{chatId}")]
+        public async Task<BaseResponseDto<bool>> SeenMessages(long chatId)
+        {
+            var userId = ControllerContext.HttpContext.UserId();
+            if (string.IsNullOrEmpty(userId))
+                return new BaseResponseDto<bool>().GenerateFailedResponse(ErrorCodes.Unauthorized);
+            if (chatId == 0)
+                return new BaseResponseDto<bool>().GenerateFailedResponse(ErrorCodes.Forbidden);
+
+            var res = await _chatService.SeenMessages(int.Parse(userId), chatId);
+            return new BaseResponseDto<bool>().GenerateSuccessResponse(res);
+        }
     }
 }

@@ -79,8 +79,10 @@ namespace ChatApp.Api.Hubs
                         ReplyToMessageId = newMessageFormDb.ReplyToMessageId.Value,
                         ReplyToFullName = ChatExtensions.GetUserFullName(
                             userRepository.GetQuery().FirstOrDefault(s => s.Id == newMessageFormDb.ReplyToMessage.SenderId)),
-                        Message = newMessageFormDb.ReplyToMessage.Message
+                        Message = newMessageFormDb.ReplyToMessage.Message,
+                        ReplyToUserId = newMessageFormDb.ReplyToMessage.SenderId,
                     } : null,
+                ReadMessage = newMessageFormDb.ReadTime != null
             };
 
             await Clients.All.SendAsync(HubMethods.ReceiveMessage, messageObject);

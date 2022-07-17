@@ -12,5 +12,6 @@
         public string CreatedAt { get; set; }
         public DateTime? CreatedDateTime { get; set; }
         public ReplyToMessageDTO? ReplyToMessage { get; set; }
+        public bool ReadMessage { get; set; }
     }
 }

@@ -9,8 +9,9 @@ namespace ChatApp.Dtos.Models.Chats
         public string LatestMessageText { get; set; }
         public string ReceiverFirstName { get; set; }
         public string ReceiverLastName { get; set; }
-        public string StartedChatDate { get; set; } 
-        public string LastUpdatedChatDate { get; set; } 
+        public string StartedChatDate { get; set; }
+        public string LastUpdatedChatDate { get; set; }
+        public int? UnreadMessagesCount { get; set; }
 
     }
 }
