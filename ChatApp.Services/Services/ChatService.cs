@@ -124,8 +124,10 @@ namespace ChatApp.Services.Services
         public async Task<bool> SeenMessages(long userId, long chatId)
         {
             var chatMessageRepo = _unitOfWork.GetRepository<ChatMessage>();
+
             var findUnreadMessages = await chatMessageRepo.GetQuery()
-                .Where(p => p.ReadTime == null && p.ChatId == chatId && p.ReceiverId == userId).ToListAsync();
+                .Where(p => p.ReadTime == null && p.ChatId == chatId && p.ReceiverId == userId)
+                .ToListAsync();
             if (findUnreadMessages.Any())
             {
                 foreach (var unMessage in findUnreadMessages)
@@ -135,6 +137,30 @@ namespace ChatApp.Services.Services
                 await chatMessageRepo.SaveChanges();
                 return true;
             }
+            return false;
+        }
+
+        public async Task<bool> ReceiverSeenAllMessages(long userId, long chatId)
+        {
+            var chatRepo = _unitOfWork.GetRepository<Chat>();
+            var chatMessageRepo = _unitOfWork.GetRepository<ChatMessage>();
+            int receiverId;
+            var chatFromDb = await chatRepo.GetQuery().FirstOrDefaultAsync(p => p.Id == chatId);
+            if (chatFromDb == null)
+                return false;
+
+            if (chatFromDb.User1 == userId)
+                receiverId = (int)chatFromDb.User2;
+            else
+                receiverId = (int)chatFromDb.User1;
+
+            var findMessages = chatMessageRepo.GetQuery()
+                .Where(p => p.ChatId == chatId && p.ReceiverId == receiverId && p.SenderId == userId)
+                .AsQueryable();
+            var findUnreadMessages = findMessages.Where(p => p.ReadTime == null);
+            if (!findUnreadMessages.Any() && findMessages.Any())
+                return true;
+
             return false;
         }
 

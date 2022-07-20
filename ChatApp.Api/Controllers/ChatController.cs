@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChatApp.Api.Controllers
 {
     [Route("api/chat")]
+    [ServiceFilter(typeof(AuthFilter))]
     public class ChatController : BaseApiController
     {
 
@@ -17,8 +18,7 @@ namespace ChatApp.Api.Controllers
         {
             _chatService = chatService;
         }
-
-        [ServiceFilter(typeof(AuthFilter))]
+       
         [HttpGet("getAllUserChats")]
         public async Task<BaseResponseDto<List<ChatDTO>>> GetAllUserChats()
         {
@@ -31,7 +31,6 @@ namespace ChatApp.Api.Controllers
                 .GenerateSuccessResponse(res);
         }
 
-        [ServiceFilter(typeof(AuthFilter))]
         [HttpGet("getUserChatByChatId/{chatId}")]
         public async Task<BaseResponseDto<ChatDTO>> GetUserChatByChatId(long chatId)
         {
@@ -44,7 +43,6 @@ namespace ChatApp.Api.Controllers
                 .GenerateSuccessResponse(res);
         }
 
-        [ServiceFilter(typeof(AuthFilter))]
         [HttpGet("HistoryMessages")]
         public async Task<BaseResponseDto<FilterPrivateMessagesDTO>> GetHistoryMessages([FromQuery] FilterPrivateMessagesDTO filter)
         {
@@ -66,7 +64,6 @@ namespace ChatApp.Api.Controllers
                 .GenerateSuccessResponse(result);
         }
 
-        [ServiceFilter(typeof(AuthFilter))]
         [HttpGet("SeenMessages/{chatId}")]
         public async Task<BaseResponseDto<bool>> SeenMessages(long chatId)
         {
@@ -77,6 +74,19 @@ namespace ChatApp.Api.Controllers
                 return new BaseResponseDto<bool>().GenerateFailedResponse(ErrorCodes.Forbidden);
 
             var res = await _chatService.SeenMessages(int.Parse(userId), chatId);
+            return new BaseResponseDto<bool>().GenerateSuccessResponse(res);
+        }
+
+        [HttpGet("ReceiverSeenAllMessages/{chatId}")]
+        public async Task<BaseResponseDto<bool>> ReceiverSeenAllMessages(long chatId)
+        {
+            var userId = ControllerContext.HttpContext.UserId();
+            if (string.IsNullOrEmpty(userId))
+                return new BaseResponseDto<bool>().GenerateFailedResponse(ErrorCodes.Unauthorized);
+            if (chatId == 0)
+                return new BaseResponseDto<bool>().GenerateFailedResponse(ErrorCodes.Forbidden);
+
+            var res = await _chatService.ReceiverSeenAllMessages(int.Parse(userId), chatId);
             return new BaseResponseDto<bool>().GenerateSuccessResponse(res);
         }
     }
