@@ -15,11 +15,12 @@ namespace ChatApp.Api.Hubs
     {
         private readonly IUserService _userService;
         private readonly IUnitOfWork _unitOfWork;
-
-        public ChatHub(IUserService userService, IUnitOfWork unitOfWork)
+        private readonly IChatService _chatService;
+        public ChatHub(IUserService userService, IUnitOfWork unitOfWork, IChatService chatService)
         {
             _userService = userService;
             _unitOfWork = unitOfWork;
+            _chatService = chatService;
         }
         public async Task SendMessage(SendMessageDTO message)
         {
@@ -82,10 +83,19 @@ namespace ChatApp.Api.Hubs
                         Message = newMessageFormDb.ReplyToMessage.Message,
                         ReplyToUserId = newMessageFormDb.ReplyToMessage.SenderId,
                     } : null,
-                ReadMessage = newMessageFormDb.ReadTime != null
+                ReadMessage = newMessageFormDb.ReadTime != null,
+                SenderFullName = ChatExtensions.GetUserFullName(userRepository.GetQuery().FirstOrDefault(u => u.Id == newMessage.SenderId)),
             };
 
             await Clients.All.SendAsync(HubMethods.ReceiveMessage, messageObject);
+        }
+
+        public async Task ReceiverSeenMessages(long chatId)
+        {
+            var userId = int.Parse(Context.GetHttpContext()?.UserId() ??
+                                   throw new InvalidOperationException("User Not Found"));
+            var res = await _chatService.ReceiverSeenAllMessages(userId, chatId);
+            await Clients.All.SendAsync(HubMethods.UpdateSenderMessagesReadTime, res);
         }
     }
 }

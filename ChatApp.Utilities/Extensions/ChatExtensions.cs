@@ -1,4 +1,5 @@
-﻿using ChatApp.Entities.Models.User;
+﻿using ChatApp.Dtos.Models.Chats;
+using ChatApp.Entities.Models.User;
 
 namespace ChatApp.Utilities.Extensions
 {

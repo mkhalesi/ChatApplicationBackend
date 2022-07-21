@@ -64,9 +64,9 @@ namespace ChatApp.Services.Services
                     StartedChatDate = p.CreatedAt.ToString("M"),
                     LastUpdatedChatDate = p.CreatedAt.ToString("M"),
                     ReceiverFirstName = findReceiverInUserChats.Any(s => s.ChatId == p.Id) ?
-                        findReceiverInUserChats.Single(s => s.ChatId == p.Id).FirstName : "",
+                        findReceiverInUserChats.First(s => s.ChatId == p.Id).FirstName : "",
                     ReceiverLastName = findReceiverInUserChats.Any(s => s.ChatId == p.Id) ?
-                        findReceiverInUserChats.Single(s => s.ChatId == p.Id).LastName : "",
+                        findReceiverInUserChats.First(s => s.ChatId == p.Id).LastName : "",
                     LatestMessageText = p.ChatMessages.Any() ?
                         p.ChatMessages.OrderByDescending(s => s.CreatedAt).First().Message : "",
                 }).FirstOrDefaultAsync()
@@ -189,6 +189,14 @@ namespace ChatApp.Services.Services
                     LastName = p.LastName,
                     ChatId = userChats.SingleOrDefault(s => s.ReceiverId == p.Id)!.ChatId,
                 }).AsQueryable();
+        }
+
+        public string GetSenderFullNameByNewMessage(PrivateChatMessageDto newMessage)
+        {
+            var userRepository = _unitOfWork.GetRepository<User>();
+            var findSenderFromDb = userRepository.GetQuery().FirstOrDefault(p => p.Id == newMessage.SenderId);
+            if (findSenderFromDb == null) return "";
+            return findSenderFromDb.FirstName + " " + findSenderFromDb.LastName;
         }
 
         #endregion

@@ -6,6 +6,7 @@
         public long ChatMessageId { get; set; }
         public long ReceiverId { get; set; }
         public long SenderId { get; set; }
+        public string? SenderFullName { get; set; }
         public string Message { get; set; }
         public bool ActiveUserHasSender { get; set; }
         public string UpdatedAt { get; set; }
